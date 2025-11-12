@@ -1,3 +1,4 @@
+import { url } from "inspector";
 import { Cache } from "./pokecache.js";
 import { CacheEntry } from "./pokecache.js";
 
@@ -37,20 +38,56 @@ export class PokeAPI {
 
   async fetchLocation(locationName?: string ): Promise<Location> {
     const locationURL = `${PokeAPI.baseURL}/location-area/${locationName}`;
-    const response = await fetch(locationURL, {
-        method: "GET",
-    });
 
-    const result: Location = await response.json();
-    
-    /*let location: Location = {
+    const cacheCheck = this.cache.get(locationURL);
+    if(cacheCheck){
+      return cacheCheck;
+    }
+
+    try{
+      const response = await fetch(locationURL, {
+        method: "GET",
+      });
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      const result: Location = await response.json();
+      this.cache.add(locationURL, result);
+       return result;
+    } catch (err) {
+      throw new Error(`ERROR: ${(err as Error).message}`);
+    }
+   
+  };
+  async fetchPokemon(pokemonName?: string) : Promise<Pokemon> {
+    const pokemonURL = `${PokeAPI.baseURL}/pokemon/${pokemonName}`;
+    const cacheCheck = this.cache.get(pokemonURL);
+    if(cacheCheck){
+      return cacheCheck;
+    }
+
+    try {
+      const response = await fetch(pokemonURL, {
+        method: "GET",
+      });
+      if(!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+      }
+      const result = await response.json();
+      const newPokemon: Pokemon = {
         name: result.name,
-        url: result.url,
-        pokemon: result.pokemon_encounters.map((r) => r.pokemon);
-    };*/
-    return result;
-  }
+        base_experience: result.base_experience,    
+      }
+      this.cache.add(pokemonURL,newPokemon);
+      return newPokemon;
+    } catch (err) {
+      throw new Error(`ERROR: ${(err as Error).message}`);
+    }
+
+  };
 }
+
+
 
 export type ShallowLocations = {
   next: string | null,
@@ -109,4 +146,9 @@ export type Location = {
       };
     }[];
   }[];
+};
+
+export type Pokemon = {
+    name: string,
+    base_experience: number,
 };

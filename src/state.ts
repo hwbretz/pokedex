@@ -1,6 +1,7 @@
 import { createInterface, type Interface } from "readline";
 import { getCommands } from "./commands.js";
 import { PokeAPI } from "./pokeapi.js";
+import { Pokemon } from "./pokeapi.js";
 
 export type CLICommand = {
     name: string,
@@ -8,10 +9,12 @@ export type CLICommand = {
     callback: (state: State, ...args: string[]) => Promise<void>;
 }
 
+
 export type State = {
     reader: Interface,
     commands: Record<string, CLICommand>,
     poke: PokeAPI,
+    pokedex: Record<string,Pokemon>,
     nextLocationsURL: string | null,
     prevLocationsURL: string | null,
 }
@@ -25,13 +28,12 @@ export async function initState (){
 
     let commands = getCommands();
     let pokedex = new PokeAPI(1000);
-    /*const locs = await pokedex.fetchLocations();
-    const nextUrl = locs.next;
-    const prevUrl = locs.previous;*/
+    let userPokedex : Record<string,Pokemon> = {};
     let state: State ={
         reader: lineReader,
         commands: getCommands(),
         poke: pokedex,
+        pokedex: userPokedex,
         nextLocationsURL: null,
         prevLocationsURL: null,
 
